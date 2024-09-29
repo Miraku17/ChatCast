@@ -12,6 +12,10 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      fontFamily: {
+        sans: ['var(--font-work-sans)'],
+        'league-spartan': ['var(--font-league-spartan)'],
+      },
     },
   },
   plugins: [],

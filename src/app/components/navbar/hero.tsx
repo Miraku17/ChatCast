@@ -108,7 +108,7 @@ const CreatePDFsUI = () => {
 
 interface FeatureCardProps {
   number?: string;
-  icon?: React.ReactNode;
+  icon?: string;
   title: string;
   description: string;
   subDescription?: string;

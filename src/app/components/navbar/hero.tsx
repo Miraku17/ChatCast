@@ -186,7 +186,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
       </div>
       <h3 className="text-base sm:text-lg md:text-xl font-bold mb-3 mt-6">{title}</h3>
       <p className="text-xs sm:text-sm mb-4">{description}</p>
-      <button className="mt-2 bg-white text-black px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-semibold hover:bg-gray-100 transition-colors rounded-lg">
+      <button className="mt-2 bg-white text-black px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-semibold hover:bg-gray-100 transition-colors">
         Use Now
       </button>
     </motion.div>

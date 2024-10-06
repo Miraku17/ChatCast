@@ -1,5 +1,5 @@
 import React from 'react'
-import CreatePDFsUI from './components/navbar/hero'
+import CreatePDFsUI from './components/hero/hero'
 
 
 const page = () => {

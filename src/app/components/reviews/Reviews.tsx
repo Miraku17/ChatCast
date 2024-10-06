@@ -71,8 +71,8 @@ const Reviews = () => {
   ];
 
   return (
-    <div className="py-12 px-4 bg-gray-50 text-black">
-      <h2 className="font-semibold text-3xl text-center mb-8">
+    <div className="py-12 px-4 bg-gray-50 ">
+      <h2 className="font-semibold text-3xl text-center mb-8 text-black">
         What people are saying about ChatCast
       </h2>
       <div className="flex flex-col md:flex-row justify-center gap-8 max-w-6xl mx-auto">

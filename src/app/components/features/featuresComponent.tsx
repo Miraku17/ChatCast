@@ -13,7 +13,7 @@ const Card: React.FC<CardProps> = ({ icon, title, description }) => {
       <div className="bg-white p-3 rounded-xl mb-4 shadow-md">
         {icon}
       </div>
-      <h2 className="text-lg font-semibold mb-2">{title}</h2>
+      <h2 className="text-lg font-semibold mb-2 text-black">{title}</h2>
       <p className="text-sm text-gray-600">{description}</p>
     </div>
   );
@@ -39,8 +39,8 @@ const FeaturesComponent = () => {
   ];
 
   return (
-    <div className="py-12 px-4 text-black ">
-      <h1 className="font-normal text-3xl text-center mb-12">Features</h1>
+    <div className="py-12 px-4  ">
+      <h1 className="font-normal text-3xl text-center mb-12 text-black">Features</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
         {features.map((feature, index) => (

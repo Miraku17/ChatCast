@@ -8,10 +8,6 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      colors: {
-        background: "var(--background)",  // Background still uses variable
-        foreground: "#000000",  // Use fixed black color for text
-      },
       fontFamily: {
         sans: ['var(--font-work-sans)'],
         'league-spartan': ['var(--font-league-spartan)'],

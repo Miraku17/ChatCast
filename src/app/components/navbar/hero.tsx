@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 const CreatePDFsUI = () => {
   return (
-    <div className="bg-[#EFE7F7] flex flex-col items-center p-4 sm:p-8 text-center relative overflow-hidden min-h-screen">
+    <div className="bg-[#EFE7F7] flex flex-col items-center p-4 sm:p-8 text-center relative overflow-hidden min-h-screen text-black">
       <div className="max-w-7xl w-full relative py-8 sm:py-12">
         <motion.div
           className="absolute left-0 top-1/4 transform -translate-y-1/2 w-1/6 h-1/3 hidden lg:block"

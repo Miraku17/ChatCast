@@ -71,7 +71,7 @@ const Reviews = () => {
   ];
 
   return (
-    <div className="py-12 px-4 bg-gray-50">
+    <div className="py-12 px-4 bg-gray-50 text-black">
       <h2 className="font-semibold text-3xl text-center mb-8">
         What people are saying about ChatCast
       </h2>

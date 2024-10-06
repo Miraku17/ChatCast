@@ -39,7 +39,7 @@ const FeaturesComponent = () => {
   ];
 
   return (
-    <div className="py-12 px-4 ">
+    <div className="py-12 px-4 text-black ">
       <h1 className="font-normal text-3xl text-center mb-12">Features</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">

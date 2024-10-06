@@ -31,7 +31,7 @@ export default function RootLayout({
         className="font-sans antialiased bg-[#EFE7F7]"
       >
         <Navbar />
-        <main>{children}</main>
+        <main className="max-w-7xl mx-auto">{children}</main>
       </body>
     </html>
   );

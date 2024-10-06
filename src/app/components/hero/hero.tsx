@@ -47,7 +47,7 @@ const CreatePDFsUI = () => {
           />
         </motion.div>
         <div className="relative z-10 mb-6 sm:mb-8 md:mb-10">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold text-center leading-tight">
+          <h1 className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-center leading-tight">
             CREATE PDFs
             <br />
             INSTANTLY
@@ -132,7 +132,9 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
         <div className="text-center mt-4 sm:mt-6">
           <h3
             className={`font-bold ${
-              title === "4.9" ? "text-2xl sm:text-3xl md:text-4xl" : "text-base sm:text-lg md:text-xl"
+              title === "4.9"
+                ? "text-2xl sm:text-3xl md:text-4xl"
+                : "text-base sm:text-lg md:text-xl"
             } mb-2`}
           >
             {title}

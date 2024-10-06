@@ -9,8 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        background: "var(--background)",  // Background still uses variable
+        foreground: "#000000",  // Use fixed black color for text
       },
       fontFamily: {
         sans: ['var(--font-work-sans)'],

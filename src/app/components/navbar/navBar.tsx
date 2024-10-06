@@ -11,7 +11,7 @@ const Navbar = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const handleNavigation = (path) => {
+  const handleNavigation = (path:any) => {
     router.push(path);
     setIsMenuOpen(false);
   };

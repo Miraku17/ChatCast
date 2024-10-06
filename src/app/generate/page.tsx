@@ -9,7 +9,7 @@ const Page = () => {
   const [placeholderText, setPlaceholderText] = useState("");
   const [showInput, setShowInput] = useState(false);
 
-  const handleSubmit = (e:any) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Submitted link:", linkInput);
     // Add your logic here to process the ChatGPT link

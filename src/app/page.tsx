@@ -11,7 +11,7 @@ const page = () => {
       </div>
 
       <div className="bg-white mt-12 rounded-lg shadow-lg">
-            <Reviews />
+        <Reviews />
       </div>
     </div>
   );

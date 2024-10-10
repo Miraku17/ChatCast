@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Work_Sans, League_Spartan } from 'next/font/google';
 import "./globals.css";
 import Navbar from "./components/navbar/navBar";
-
+import Footer from "./components/footer/footer";
 const workSans = Work_Sans({
   subsets: ['latin'],
   variable: '--font-work-sans',
@@ -32,6 +32,7 @@ export default function RootLayout({
       >
         <Navbar />
         <main className="max-w-7xl mx-auto">{children}</main>
+        <Footer />
       </body>
     </html>
   );

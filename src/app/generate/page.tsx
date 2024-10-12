@@ -34,7 +34,7 @@ const Page: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch data');
+        throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();

@@ -1,18 +1,56 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Link } from "lucide-react";
+import { Link, Loader } from "lucide-react";
 import { motion, useAnimate } from "framer-motion";
 
-const Page = () => {
-  const [linkInput, setLinkInput] = useState("");
-  const [scope, animate] = useAnimate();
-  const [placeholderText, setPlaceholderText] = useState("");
-  const [showInput, setShowInput] = useState(false);
+// Define the structure of the conversation data
+interface Conversation {
+  user: string;
+  ai: string;
+}
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+const Page: React.FC = () => {
+  const [linkInput, setLinkInput] = useState<string>("");
+  const [scope, animate] = useAnimate();
+  const [placeholderText, setPlaceholderText] = useState<string>("");
+  const [showInput, setShowInput] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [error, setError] = useState<string>("");
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Submitted link:", linkInput);
-    // Add your logic here to process the ChatGPT link
+    setIsLoading(true);
+    setError("");
+    setConversations([]);
+
+    try {
+      const response = await fetch('/api/fetchData', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: linkInput }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+
+      const data = await response.json();
+      
+      // Ensure the data structure matches the expected format
+      if (Array.isArray(data.conversations)) {
+        setConversations(data.conversations);
+      } else {
+        throw new Error('Invalid data structure');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setError("Failed to process the link. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -41,7 +79,7 @@ const Page = () => {
   }, [animate, scope, showInput]);
 
   return (
-    <div className="flex items-center justify-center py-8 mt-8">
+    <div className="flex flex-col items-center justify-center py-8 mt-8 text-black">
       <div className="flex flex-col md:flex-row items-center max-w-4xl w-full">
         <motion.div
           className="w-full md:w-1/2 p-4"
@@ -76,7 +114,7 @@ const Page = () => {
                 value={linkInput}
                 onChange={(e) => setLinkInput(e.target.value)}
                 placeholder={placeholderText}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+                className="w-full px-4 py-2 border text-black border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
               />
             ) : (
               <div className="w-full px-4 py-2 border border-gray-300 rounded-md">
@@ -96,13 +134,43 @@ const Page = () => {
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              disabled={isLoading}
             >
-              <Link className="mr-2" size={20} />
-              Process Link
+              {isLoading ? (
+                <Loader className="mr-2 animate-spin" size={20} />
+              ) : (
+                <Link className="mr-2" size={20} />
+              )}
+              {isLoading ? "Processing..." : "Process Link"}
             </motion.button>
           </form>
+          {error && (
+            <p className="text-red-500 mt-4">{error}</p>
+          )}
         </div>
       </div>
+      {conversations.length > 0 && (
+        <motion.div
+          className="mt-8 w-full max-w-4xl"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="text-2xl font-bold mb-4">Conversation</h2>
+          {conversations.map((conv, index) => (
+            <motion.div
+              key={index}
+              className="mb-4 p-4 border rounded-lg"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <p className="font-semibold mb-2">User: {conv.user}</p>
+              <p>AI: {conv.ai}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
     </div>
   );
 };

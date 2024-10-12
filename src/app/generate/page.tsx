@@ -38,13 +38,13 @@ const Page: React.FC = () => {
       // }
 
       const data = await response.json();
-      
+      console.log("Data::", data);
       // Ensure the data structure matches the expected format
-      if (Array.isArray(data.conversations)) {
-        setConversations(data.conversations);
-      } else {
-        throw new Error('Invalid data structure');
-      }
+      // if (Array.isArray(data.conversations)) {
+      //   setConversations(data.conversations);
+      // } else {
+      //   throw new Error('Invalid data structure');
+      // }
     } catch (error) {
       console.error('Error:', error);
       setError("Failed to process the link. Please try again.");

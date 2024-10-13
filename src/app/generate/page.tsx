@@ -15,13 +15,11 @@ const Page: React.FC = () => {
   const [placeholderText, setPlaceholderText] = useState<string>("");
   const [showInput, setShowInput] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [error, setError] = useState<string>("");
+  const [conversations, setConversations] = useState<string[]>([]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
     setConversations([]);
 
     try {
@@ -33,21 +31,13 @@ const Page: React.FC = () => {
         body: JSON.stringify({ url: linkInput }),
       });
 
-      // if (!response.ok) {
-      //   throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
-      // }
-
       const data = await response.json();
-      console.log("Data::", data);
-      // Ensure the data structure matches the expected format
-      // if (Array.isArray(data.conversations)) {
-      //   setConversations(data.conversations);
-      // } else {
-      //   throw new Error('Invalid data structure');
-      // }
+
+      console.log("Data:", data);
+      
+      setConversations(data);
     } catch (error) {
       console.error('Error:', error);
-      setError("Failed to process the link. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -144,32 +134,29 @@ const Page: React.FC = () => {
               {isLoading ? "Processing..." : "Process Link"}
             </motion.button>
           </form>
-          {error && (
-            <p className="text-red-500 mt-4">{error}</p>
-          )}
         </div>
       </div>
+      
+      {/* Conversation Display */}
       {conversations.length > 0 && (
-        <motion.div
-          className="mt-8 w-full max-w-4xl"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="mt-8 w-full max-w-4xl p-4 bg-white rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-4">Conversation</h2>
-          {conversations.map((conv, index) => (
-            <motion.div
-              key={index}
-              className="mb-4 p-4 border rounded-lg"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <p className="font-semibold mb-2">User: {conv.user}</p>
-              <p>AI: {conv.ai}</p>
-            </motion.div>
-          ))}
-        </motion.div>
+          <div className="space-y-4">
+            {conversations.map((message, index) => {
+              const [role, content] = message.split(': ');
+              return (
+                <div 
+                  key={index} 
+                  className={`p-3 rounded-lg ${
+                    role.toLowerCase() === 'user' ? 'bg-blue-100 text-right' : 'bg-gray-100'
+                  }`}
+                >
+                  <strong>{role}:</strong> {content}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
     </div>
   );

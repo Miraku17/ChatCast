@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, Loader } from "lucide-react";
 import { motion, useAnimate } from "framer-motion";
+import Image from 'next/image';
 
 // Define the structure of the conversation data
 interface Conversation {
@@ -69,7 +70,7 @@ const Page: React.FC = () => {
   }, [animate, scope, showInput]);
 
   return (
-    <div className="flex flex-col items-center justify-center py-8 mt-8 text-black">
+    <div className="flex flex-col items-center justify-center py-8 mt-8 text-black h-auto">
       <div className="flex flex-col md:flex-row items-center max-w-4xl w-full">
         <motion.div
           className="w-full md:w-1/2 p-4"
@@ -89,10 +90,14 @@ const Page: React.FC = () => {
             },
           }}
         >
-          <img
+          <Image
             src="/images/robot-2.png"
             alt="ChatGPT Link Processor"
-            className="w-full h-auto rounded-lg"
+            width={500}
+            height={500}
+            layout="responsive"
+            priority
+            className="rounded-lg"
           />
         </motion.div>
         <div className="w-full md:w-1/2 p-8">

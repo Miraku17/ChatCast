@@ -55,10 +55,15 @@ export async function POST(request: NextRequest) {
         const role = item.message.author.role;
         const content = item.message.content.parts.join(' ');
         if (role === 'user') {
-          return `User: ${content}`;
+          return {
+            role: "User",
+            content: content,
+          }
         } else if (role === 'assistant') {
-          return `Assistant: ${content}`;
-        }
+            return {
+                role: "Assistant",
+                content: content,
+              }        }
         return null;
       })
       .filter((message): message is string => message !== null);

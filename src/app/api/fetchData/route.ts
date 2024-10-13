@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Remix context not found' }, { status: 404 });
     }
 
-    const linearConversationMatch = remixContext.match(/"linear_conversation":\s*(\[.*?\])(?=,\s*"has_user_editable_context")/s);
+    // Updated regular expression without the /s flag
+    const linearConversationMatch = remixContext.match(/"linear_conversation":\s*(\[[\s\S]*?\])(?=,\s*"has_user_editable_context")/);
 
     if (!linearConversationMatch) {
       return NextResponse.json({ error: 'Linear conversation not found' }, { status: 404 });

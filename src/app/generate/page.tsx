@@ -7,10 +7,10 @@ import Image from "next/image";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-
+// Define the types for the conversation messages
 interface Conversation {
-  user: string;
-  ai: string;
+  role: string;
+  content: string;
 }
 
 const Page: React.FC = () => {
@@ -19,7 +19,7 @@ const Page: React.FC = () => {
   const [placeholderText, setPlaceholderText] = useState<string>("");
   const [showInput, setShowInput] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [conversations, setConversations] = useState<string[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -73,21 +73,20 @@ const Page: React.FC = () => {
   const formatMessage = (content: string) => {
     // Split content into parts based on the line breaks
     const lines = content.split("\n");
-  
+
     return lines.map((line, index) => {
       // Check for code blocks
-      if (line.startsWith("```")) {
-    
-        return (
-          <pre
-            className="bg-gray-800 text-white p-4 rounded-md overflow-x-auto"
-            key={index}
-          >
-            <code>{line}</code>
-          </pre>
-        );
-      }
-  
+      // if (line.startsWith("```")) {
+      //   return (
+      //     <pre
+      //       className="bg-gray-800 text-white p-4 rounded-md overflow-x-auto"
+      //       key={index}
+      //     >
+      //       <code>{line}</code>
+      //     </pre>
+      //   );
+      // }
+
       // Check for headers
       if (line.startsWith("###")) {
         const headerText = line.replace(/^###\s*/, "").replace(/\*\*(.*?)\*\*/, "$1"); // Remove "###" from the start
@@ -97,7 +96,7 @@ const Page: React.FC = () => {
           </p>
         );
       }
-  
+
       // Check for bold text and remove "**"
       if (/\*\*(.*?)\*\*/.test(line)) {
         const boldText = line.replace(/\*\*(.*?)\*\*/, "$1"); // Remove ** from text
@@ -107,7 +106,7 @@ const Page: React.FC = () => {
           </p>
         );
       }
-  
+
       // Check for lines with hyphens and convert to bullet points
       if (line.includes("- ")) {
         const bulletText = line.replace(/^\s*-\s*/, "").trim(); // Remove leading hyphen and whitespace
@@ -117,15 +116,14 @@ const Page: React.FC = () => {
           </li>
         );
       }
-  
+
       // Regular text
       return <p key={index}>{line}</p>;
     });
   };
-  
 
   return (
-    <div className="flex flex-col items-center justify-center py-8 mt-8 text-black h-auto ">
+    <div className="flex flex-col items-center justify-center py-8 mt-8 text-black h-auto">
       <div className="flex flex-col md:flex-row items-center max-w-4xl w-full">
         {/* Animated Image Section */}
         <motion.div
@@ -208,8 +206,7 @@ const Page: React.FC = () => {
           <h2 className="text-2xl font-bold mb-4">Conversation</h2>
           <ul className="space-y-4 list-disc list-inside">
             {conversations.map((message, index) => {
-              const role = message.role;
-              const content = message.content;
+              const { role, content } = message;
               const isUser = role.toLowerCase() === "user"; // Check if it's the user
 
               return (

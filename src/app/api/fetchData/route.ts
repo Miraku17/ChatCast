@@ -13,13 +13,18 @@ type LinearConversationItem = {
   };
 };
 
-export async function POST(request: NextRequest) {
-  const { url }: { url: string } = await request.json();
-  if (!url) {
-    return NextResponse.json({ error: 'URL is required' }, { status: 400 });
-  }
+type Message = {
+  role: string;
+  content: string;
+};
 
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    const { url }: { url: string } = await request.json();
+    if (!url) {
+      return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+    }
+
     const { data: html } = await axios.get<string>(url);
     const $ = cheerio.load(html);
     let remixContext = '';
@@ -35,8 +40,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Remix context not found' }, { status: 404 });
     }
 
-    // Updated regular expression without the /s flag
-    const linearConversationMatch = remixContext.match(/"linear_conversation":\s*(\[[\s\S]*?\])(?=,\s*"has_user_editable_context")/);
+    const linearConversationMatch = remixContext.match(
+      /"linear_conversation":\s*(\[[\s\S]*?\])(?=,\s*"has_user_editable_context")/
+    );
 
     if (!linearConversationMatch) {
       return NextResponse.json({ error: 'Linear conversation not found' }, { status: 404 });
@@ -44,29 +50,20 @@ export async function POST(request: NextRequest) {
 
     const linearConversation: LinearConversationItem[] = JSON.parse(linearConversationMatch[1]);
 
-    const messages = linearConversation
-      .filter(item => 
-        item.message && 
-        item.message.content && 
-        item.message.content.parts &&
-        item.message.author.role !== 'system'
-      )
+    const messages: Message[] = linearConversation
+      .filter(item => item.message?.content?.parts && item.message.author.role !== 'system')
       .map(item => {
         const role = item.message.author.role;
         const content = item.message.content.parts.join(' ');
+
         if (role === 'user') {
-          return {
-            role: "User",
-            content: content,
-          }
+          return { role: 'User', content };
         } else if (role === 'assistant') {
-            return {
-                role: "Assistant",
-                content: content,
-              }        }
+          return { role: 'Assistant', content };
+        }
         return null;
       })
-      .filter((message): message is string => message !== null);
+      .filter((message): message is Message => message !== null);
 
     return NextResponse.json(messages);
   } catch (error) {

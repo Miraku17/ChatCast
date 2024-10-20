@@ -4,8 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Link, Loader } from "lucide-react";
 import { motion, useAnimate } from "framer-motion";
 import Image from "next/image";
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
 
 // Define the types for the conversation messages
 interface Conversation {
@@ -27,7 +26,7 @@ const Page: React.FC = () => {
     setConversations([]);
 
     try {
-      const response = await fetch("/api/fetchData", {
+      const response = await fetch("/api/scrape", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

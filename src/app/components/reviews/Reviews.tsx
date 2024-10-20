@@ -1,6 +1,8 @@
+"use client"
 import React from "react";
 import Image from "next/image";
 import { Star } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface ReviewsProps {
   image: string;
@@ -10,15 +12,23 @@ interface ReviewsProps {
   rating: number;
 }
 
-const ReviewsCard: React.FC<ReviewsProps> = ({
+const ReviewsCard: React.FC<ReviewsProps & { index: number }> = ({
   image,
   review,
   name,
   position,
   rating,
+  index,
 }) => {
   return (
-    <div className="flex flex-col items-center text-center w-full max-w-sm bg-white rounded-lg shadow-md p-6 transition-transform hover:scale-105">
+    <motion.div 
+      className="flex flex-col items-center text-center w-full max-w-sm bg-white rounded-lg shadow-md p-6"
+      initial={{ opacity: 0, scale: 0.8 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true, amount: 0.8 }}
+      transition={{ duration: 0.6, delay: index * 0.15 }}
+      whileHover={{ scale: 1.05, boxShadow: "0 10px 20px rgba(0,0,0,0.1)" }}
+    >
       <Image
         src={image}
         alt={`Portrait of ${name}`}
@@ -41,7 +51,7 @@ const ReviewsCard: React.FC<ReviewsProps> = ({
         <p className="text-sm font-bold text-gray-800">{name}</p>
         <p className="text-xs text-gray-600">{position}</p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -71,10 +81,16 @@ const Reviews = () => {
   ];
 
   return (
-    <div className="py-12 px-4 bg-gray-50 ">
-      <h2 className="font-semibold text-3xl text-center mb-8 text-black">
+    <div className="py-12 px-4 bg-gray-50">
+      <motion.h2 
+        className="font-semibold text-3xl text-center mb-8 text-black"
+        initial={{ opacity: 0, rotateX: -50 }}
+        whileInView={{ opacity: 1, rotateX: 0 }}
+        viewport={{ once: true, amount: 0.8 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
         What people are saying about ChatCast
-      </h2>
+      </motion.h2>
       <div className="flex flex-col md:flex-row justify-center gap-8 max-w-6xl mx-auto">
         {reviews.map((review, index) => (
           <ReviewsCard
@@ -84,6 +100,7 @@ const Reviews = () => {
             name={review.name}
             position={review.position}
             rating={review.rating}
+            index={index}
           />
         ))}
       </div>

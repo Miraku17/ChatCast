@@ -16,7 +16,7 @@ const Card: React.FC<CardProps> = ({ icon, title, description, index }) => {
       className="flex flex-col items-center text-center w-full max-w-sm mx-auto p-4"
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: false, amount: 0.8 }}
+      viewport={{ once: true, amount: 0.8 }}
       transition={{ duration: 0.5, delay: index * 0.2 }}
     >
       <div className="bg-white p-3 rounded-xl mb-4 shadow-md">
@@ -53,7 +53,7 @@ const FeaturesComponent = () => {
         className="font-normal text-3xl text-center mb-12 text-black"
         initial={{ opacity: 0, y: -20 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: false, amount: 0.8 }}
+        viewport={{ once: true, amount: 0.8 }}
         transition={{ duration: 0.5 }}
       >
         Features

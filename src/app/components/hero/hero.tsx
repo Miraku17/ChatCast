@@ -2,9 +2,28 @@
 import React from "react";
 import { FileText } from "lucide-react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, useAnimation } from "framer-motion";
 
 const CreatePDFsUI = () => {
+  const controls = useAnimation();
+  const lines = ["CREATE PDFs", "INSTANTLY"];
+
+  React.useEffect(() => {
+    const animateText = async () => {
+      for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+        await controls.start(i => ({
+          opacity: 1,
+          transition: { delay: i * 0.1 }
+        }));
+        // Pause between lines
+        if (lineIndex < lines.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 550));
+        }
+      }
+    };
+    animateText();
+  }, [controls, lines]);
+
   return (
     <div className="bg-[#EFE7F7] flex flex-col items-center p-4 sm:p-6 md:p-8 text-center relative overflow-hidden text-black mt-4">
       <div className="max-w-7xl w-full relative py-4 sm:py-6 md:py-8">
@@ -48,15 +67,34 @@ const CreatePDFsUI = () => {
         </motion.div>
         <div className="relative z-10 mb-6 sm:mb-8 md:mb-10">
           <h1 className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-center leading-tight">
-            CREATE PDFs
-            <br />
-            INSTANTLY
+            {lines.map((line, lineIndex) => (
+              <div key={lineIndex}>
+                {line.split("").map((char, charIndex) => (
+                  <motion.span
+                    key={`${char}-${charIndex}`}
+                    custom={charIndex + lineIndex * line.length}
+                    animate={controls}
+                    initial={{ opacity: 0 }}
+                    transition={{ duration: 0.1 }}
+                    className="inline-block"
+                  >
+                    {char === " " ? "\u00A0" : char}
+                  </motion.span>
+                ))}
+              </div>
+            ))}
           </h1>
-          <p className="text-xs sm:text-sm md:text-base lg:text-lg mt-3 sm:mt-4 md:mt-5 px-2 sm:px-4 max-w-2xl mx-auto">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2, duration: 0.5 }}
+            className="text-xs sm:text-sm md:text-base lg:text-lg mt-3 sm:mt-4 md:mt-5 px-2 sm:px-4 max-w-2xl mx-auto"
+          >
             Preserve AI-generated insights: Turn ephemeral ChatGPT conversations
             into lasting resources
-          </p>
+          </motion.p>
         </div>
+
         <div className="flex flex-col sm:flex-row justify-evenly space-y-6 sm:space-y-0 sm:space-x-2 md:space-x-4 relative z-10">
           <FeatureCard
             number="1"

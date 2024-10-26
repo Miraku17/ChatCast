@@ -2,6 +2,7 @@ import React from "react";
 import CreatePDFsUI from "./components/hero/hero";
 import FeaturesComponent from "./components/features/featuresComponent";
 import Reviews from "./components/reviews/Reviews";
+import Footer from "./components/footer/footer";
 const page = () => {
   return (
     <div>
@@ -13,6 +14,9 @@ const page = () => {
       <div className="bg-white mt-12 rounded-lg shadow-lg">
         <Reviews />
       </div>
+
+      <Footer />
+
     </div>
   );
 };

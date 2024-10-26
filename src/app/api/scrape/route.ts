@@ -16,6 +16,8 @@ const DEFAULT_PAPER_FORMAT = "A4";
 
 // Utility Functions
 function sanitizeFileName(fileName: string): string {
+  if (!fileName) return "downloaded-content.pdf";
+  
   // Remove any dangerous characters and limit length
   let sanitized = fileName
     .replace(/[^a-zA-Z0-9-_\.]/g, "_")
@@ -36,68 +38,68 @@ function validateUrl(url: string): boolean {
 
 function generateStylesheet(darkMode: boolean): string {
   return `
-        <style>
-            body { 
-                font-family: Arial, sans-serif; 
-                padding: 20px; 
-                line-height: 1.6;
-                color: ${darkMode ? "#e0e0e0" : "#333333"};
-                background-color: ${darkMode ? "#333333" : "#ffffff"};
-            }
-            h1 {
-                color: ${darkMode ? "#ffffff" : "#000000"};
-                border-bottom: 1px solid ${darkMode ? "#444444" : "#eeeeee"};
-                padding-bottom: 10px;
-            }
-            pre {
-                background-color: ${darkMode ? "#1a1a1a" : "#f5f5f5"};
-                color: ${darkMode ? "#00ff00" : "#333333"};
-                padding: 10px;
-                border-radius: 5px;
-                overflow-x: auto;
-            }
-            code {
-                font-family: 'Courier New', Courier, monospace;
-            }
-            a {
-                color: #3498db;
-            }
-            p, ul, ol {
-                margin-bottom: 15px;
-            }
-            strong, b {
-                color: ${darkMode ? "#ffffff" : "#000000"};
-            }
-            .user-message {
-                background-color: ${darkMode ? "#17472D" : "#e8f5e9"}; 
-                color: ${darkMode ? "#ffffff" : "#000000"};
-                margin-bottom: 15px;
-                padding: 10px;
-                border-radius: 10px;
-                display: flex;
-                align-items: flex-start;
-            }
-            .ai-message {
-                background-color: ${darkMode ? "#1a1a1a" : "#f5f5f5"};
-                color: ${darkMode ? "#e0e0e0" : "#333333"};
-                margin-bottom: 15px;
-                padding: 10px;
-                border-radius: 10px;
-            }
-            .user-icon {
-                font-size: 24px;
-                margin-right: 10px;
-            }
-            .message-content {
-                flex-grow: 1;
-            }
-            .message-container {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-            }
-        </style>
-    `;
+    <style>
+      body { 
+        font-family: Arial, sans-serif; 
+        padding: 20px; 
+        line-height: 1.6;
+        color: ${darkMode ? "#e0e0e0" : "#333333"};
+        background-color: ${darkMode ? "#333333" : "#ffffff"};
+      }
+      h1 {
+        color: ${darkMode ? "#ffffff" : "#000000"};
+        border-bottom: 1px solid ${darkMode ? "#444444" : "#eeeeee"};
+        padding-bottom: 10px;
+      }
+      pre {
+        background-color: ${darkMode ? "#1a1a1a" : "#f5f5f5"};
+        color: ${darkMode ? "#00ff00" : "#333333"};
+        padding: 10px;
+        border-radius: 5px;
+        overflow-x: auto;
+      }
+      code {
+        font-family: 'Courier New', Courier, monospace;
+      }
+      a {
+        color: #3498db;
+      }
+      p, ul, ol {
+        margin-bottom: 15px;
+      }
+      strong, b {
+        color: ${darkMode ? "#ffffff" : "#000000"};
+      }
+      .user-message {
+        background-color: ${darkMode ? "#17472D" : "#e8f5e9"}; 
+        color: ${darkMode ? "#ffffff" : "#000000"};
+        margin-bottom: 15px;
+        padding: 10px;
+        border-radius: 10px;
+        display: flex;
+        align-items: flex-start;
+      }
+      .ai-message {
+        background-color: ${darkMode ? "#1a1a1a" : "#f5f5f5"};
+        color: ${darkMode ? "#e0e0e0" : "#333333"};
+        margin-bottom: 15px;
+        padding: 10px;
+        border-radius: 10px;
+      }
+      .user-icon {
+        font-size: 24px;
+        margin-right: 10px;
+      }
+      .message-content {
+        flex-grow: 1;
+      }
+      .message-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+    </style>
+  `;
 }
 
 // Main PDF Generation Function
@@ -105,7 +107,10 @@ async function generatePDF(options: {
   url: string;
   paperFormat?: string;
   darkMode?: boolean;
-}) {
+}): Promise<{
+  buffer: Buffer;
+  title: string;
+}> {
   const { url, paperFormat = DEFAULT_PAPER_FORMAT, darkMode = false } = options;
 
   const browser = await chromium.launch();
@@ -121,7 +126,7 @@ async function generatePDF(options: {
     // Extract content
     const { content, title } = await page.evaluate(() => {
       const titleElement = document.querySelector("title");
-      const title = titleElement ? titleElement.textContent : "Content";
+      const title = titleElement ? titleElement.textContent || "Downloaded Content" : "Downloaded Content";
 
       const messageElements = document.querySelectorAll(
         "div[data-message-author-role]"
@@ -143,15 +148,11 @@ async function generatePDF(options: {
 
         // Add appropriate icon and content
         wrapperDiv.innerHTML = `
-                    <div class="message-container">
-                        <div class="user-icon">${
-                          isUserMessage ? "🙋" : "🤖"
-                        }</div>
-                        <div class="message-content">${
-                          clonedElement.innerHTML
-                        }</div>
-                    </div>
-                `;
+          <div class="message-container">
+            <div class="user-icon">${isUserMessage ? "🙋" : "🤖"}</div>
+            <div class="message-content">${clonedElement.innerHTML}</div>
+          </div>
+        `;
 
         content += wrapperDiv.outerHTML;
       });
@@ -164,21 +165,21 @@ async function generatePDF(options: {
     }
 
     // Generate HTML with styles
-    const stylesheet = await generateStylesheet(darkMode);
+    const stylesheet = generateStylesheet(darkMode);
     const htmlContent = `
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <title>${title}</title>
-                    ${stylesheet}
-                </head>
-                <body>
-                    <h1>${title}</h1>
-                    ${content}
-                </body>
-            </html>
-        `;
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>${title}</title>
+          ${stylesheet}
+        </head>
+        <body>
+          <h1>${title}</h1>
+          ${content}
+        </body>
+      </html>
+    `;
 
     // Create PDF
     const pdfPage = await context.newPage();
@@ -197,7 +198,7 @@ async function generatePDF(options: {
 
     return {
       buffer: pdfBuffer,
-      title,
+      title: title || "Downloaded Content", // Ensure title is always a string
     };
   } finally {
     await browser.close();
@@ -205,8 +206,6 @@ async function generatePDF(options: {
 }
 
 // API Route Handler
-// Previous code remains the same until the API Route Handler...
-
 export async function POST(request: Request) {
   try {
     const body: RequestBody = await request.json();
@@ -240,9 +239,9 @@ export async function POST(request: Request) {
     });
 
     // Use the title as filename, or custom filename if provided
-    const fileName = body.fileName
+    const fileName = body.fileName 
       ? sanitizeFileName(body.fileName)
-      : sanitizeFileName(title);
+      : sanitizeFileName(title || "Downloaded Content");
 
     // Return PDF as downloadable file
     return new NextResponse(buffer, {

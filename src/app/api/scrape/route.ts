@@ -1,120 +1,177 @@
-import { NextResponse } from 'next/server';
-import { chromium } from 'playwright';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import { NextResponse } from "next/server";
+import { chromium } from "playwright";
 
-export async function POST(request: Request) {
-    const { url }: { url: string } = await request.json();
-    if (!url) {
-        return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+// Types
+interface RequestBody {
+  url: string;
+  fileName?: string;
+  paperFormat?: string;
+  darkMode?: boolean;
+}
+
+// Constants
+const ALLOWED_PAPER_FORMATS = ["A4", "Letter", "Legal"];
+const MAX_FILENAME_LENGTH = 255;
+const DEFAULT_PAPER_FORMAT = "A4";
+
+// Utility Functions
+function sanitizeFileName(fileName: string): string {
+  // Remove any dangerous characters and limit length
+  let sanitized = fileName
+    .replace(/[^a-zA-Z0-9-_\.]/g, "_")
+    .slice(0, MAX_FILENAME_LENGTH);
+
+  // Ensure .pdf extension
+  return sanitized.endsWith(".pdf") ? sanitized : `${sanitized}.pdf`;
+}
+
+function validateUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function generateStylesheet(darkMode: boolean): string {
+  return `
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                padding: 20px; 
+                line-height: 1.6;
+                color: ${darkMode ? "#e0e0e0" : "#333333"};
+                background-color: ${darkMode ? "#333333" : "#ffffff"};
+            }
+            h1 {
+                color: ${darkMode ? "#ffffff" : "#000000"};
+                border-bottom: 1px solid ${darkMode ? "#444444" : "#eeeeee"};
+                padding-bottom: 10px;
+            }
+            pre {
+                background-color: ${darkMode ? "#1a1a1a" : "#f5f5f5"};
+                color: ${darkMode ? "#00ff00" : "#333333"};
+                padding: 10px;
+                border-radius: 5px;
+                overflow-x: auto;
+            }
+            code {
+                font-family: 'Courier New', Courier, monospace;
+            }
+            a {
+                color: #3498db;
+            }
+            p, ul, ol {
+                margin-bottom: 15px;
+            }
+            strong, b {
+                color: ${darkMode ? "#ffffff" : "#000000"};
+            }
+            .user-message {
+                background-color: ${darkMode ? "#17472D" : "#e8f5e9"}; 
+                color: ${darkMode ? "#ffffff" : "#000000"};
+                margin-bottom: 15px;
+                padding: 10px;
+                border-radius: 10px;
+                display: flex;
+                align-items: flex-start;
+            }
+            .ai-message {
+                background-color: ${darkMode ? "#1a1a1a" : "#f5f5f5"};
+                color: ${darkMode ? "#e0e0e0" : "#333333"};
+                margin-bottom: 15px;
+                padding: 10px;
+                border-radius: 10px;
+            }
+            .user-icon {
+                font-size: 24px;
+                margin-right: 10px;
+            }
+            .message-content {
+                flex-grow: 1;
+            }
+            .message-container {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+            }
+        </style>
+    `;
+}
+
+// Main PDF Generation Function
+async function generatePDF(options: {
+  url: string;
+  paperFormat?: string;
+  darkMode?: boolean;
+}) {
+  const { url, paperFormat = DEFAULT_PAPER_FORMAT, darkMode = false } = options;
+
+  const browser = await chromium.launch();
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  try {
+    await page.goto(url, {
+      waitUntil: "networkidle",
+      timeout: 30000,
+    });
+
+    // Extract content
+    const { content, title } = await page.evaluate(() => {
+      const titleElement = document.querySelector("title");
+      const title = titleElement ? titleElement.textContent : "Content";
+
+      const messageElements = document.querySelectorAll(
+        "div[data-message-author-role]"
+      );
+      let content = "";
+
+      messageElements.forEach((element) => {
+        const role = element.getAttribute("data-message-author-role");
+        const isUserMessage = role === "user";
+        const clonedElement = element.cloneNode(true) as HTMLElement;
+
+        // Remove buttons
+        clonedElement
+          .querySelectorAll("button")
+          .forEach((button) => button.remove());
+
+        const wrapperDiv = document.createElement("div");
+        wrapperDiv.className = isUserMessage ? "user-message" : "ai-message";
+
+        // Add appropriate icon and content
+        wrapperDiv.innerHTML = `
+                    <div class="message-container">
+                        <div class="user-icon">${
+                          isUserMessage ? "🙋" : "🤖"
+                        }</div>
+                        <div class="message-content">${
+                          clonedElement.innerHTML
+                        }</div>
+                    </div>
+                `;
+
+        content += wrapperDiv.outerHTML;
+      });
+
+      return { content, title };
+    });
+
+    if (!content) {
+      throw new Error("No content found on the page");
     }
 
-    try {
-        const browser = await chromium.launch();
-        const context = await browser.newContext();
-        const page = await context.newPage();
-        await page.goto(url, { waitUntil: 'networkidle' });
-
-        // Extract the content, distinguishing between user and AI messages
-        const { content, title } = await page.evaluate(() => {
-            const titleElement = document.querySelector('title');
-            const title = titleElement ? titleElement.textContent : 'Content';
-            
-            const messageElements = document.querySelectorAll('div[data-message-author-role]');
-            let content = '';
-            
-            messageElements.forEach((element) => {
-                const role = element.getAttribute('data-message-author-role');
-                const isUserMessage = role === 'user';
-                
-                // Clone the element to avoid modifying the original DOM
-                const clonedElement = element.cloneNode(true) as HTMLElement;
-                
-                // Remove all button elements from the cloned element
-                clonedElement.querySelectorAll('button').forEach(button => button.remove());
-                
-                // Wrap the content in a div with appropriate class
-                const wrapperDiv = document.createElement('div');
-                wrapperDiv.className = isUserMessage ? 'user-message' : 'ai-message';
-                
-                if (isUserMessage) {
-                    // Add user icon for user messages
-                    wrapperDiv.innerHTML = `
-                        <div class="user-icon">User👤:</div>
-                        <div class="message-content">${clonedElement.innerHTML}</div>
-                    `;
-                } else {
-                    wrapperDiv.innerHTML = clonedElement.innerHTML;
-                }
-                
-                // Add the wrapped content to the result
-                content += wrapperDiv.outerHTML;
-            });
-            
-            return { content, title };
-        });
-
-        if (!content) {
-            throw new Error('Could not find the required content');
-        }
-
-        // Generate HTML content with black background
-        const htmlContent = `
+    // Generate HTML with styles
+    const stylesheet = await generateStylesheet(darkMode);
+    const htmlContent = `
+            <!DOCTYPE html>
             <html>
                 <head>
-                    <style>
-                        body { 
-                            font-family: Arial, sans-serif; 
-                            padding: 20px; 
-                            line-height: 1.6;
-                            color: #e0e0e0;
-                            background-color: #333333;
-                        }
-                        h1 {
-                            color: #ffffff;
-                            border-bottom: 1px solid #333333;
-                            padding-bottom: 10px;
-                        }
-                        pre {
-                            background-color: #1a1a1a;
-                            color: #00ff00;
-                            padding: 10px;
-                            border-radius: 5px;
-                            overflow-x: auto;
-                        }
-                        code {
-                            font-family: 'Courier New', Courier, monospace;
-                        }
-                        a {
-                            color: #3498db;
-                        }
-                        p, ul, ol {
-                            margin-bottom: 15px;
-                        }
-                        strong, b {
-                            color: #ffffff;
-                        }
-                        .user-message {
-                            background-color: #17472D; 
-                            color: #ffffff;
-                            margin-bottom: 15px;
-                            padding: 10px;
-                            border-radius: 10px;
-                            display: flex;
-                            align-items: flex-start;
-                        }
-                        .ai-message {
-                            color: #e0e0e0;
-                            margin-bottom: 15px;
-                        }
-                        .user-icon {
-                            font-size: 24px;
-                            margin-right: 10px;
-                        }
-                        .message-content {
-                            flex-grow: 1;
-                        }
-                    </style>
+                    <meta charset="UTF-8">
+                    <title>${title}</title>
+                    ${stylesheet}
                 </head>
                 <body>
                     <h1>${title}</h1>
@@ -123,30 +180,85 @@ export async function POST(request: Request) {
             </html>
         `;
 
-        // Create a new page for PDF generation
-        const pdfPage = await context.newPage();
-        await pdfPage.setContent(htmlContent);
+    // Create PDF
+    const pdfPage = await context.newPage();
+    await pdfPage.setContent(htmlContent);
 
-        // Generate PDF with background
-        const pdfBuffer = await pdfPage.pdf({
-            format: 'A4',
-            printBackground: true,
-        });
+    const pdfBuffer = await pdfPage.pdf({
+      format: paperFormat as any,
+      printBackground: true,
+      margin: {
+        top: "20px",
+        right: "20px",
+        bottom: "20px",
+        left: "20px",
+      },
+    });
 
-        await browser.close();
+    return {
+      buffer: pdfBuffer,
+      title,
+    };
+  } finally {
+    await browser.close();
+  }
+}
 
-        // Save PDF to a file
-        const pdfFileName = `content_${Date.now()}.pdf`;
-        const pdfPath = path.join(process.cwd(), 'public', pdfFileName);
-        await fs.writeFile(pdfPath, pdfBuffer);
+// API Route Handler
+// Previous code remains the same until the API Route Handler...
 
-        // Return the path of the saved PDF
-        return NextResponse.json({ 
-            message: 'PDF generated and saved successfully',
-            pdfPath: `/public/${pdfFileName}`
-        });
-    } catch (error) {
-        console.error('Scraping or PDF generation failed:', error);
-        return NextResponse.json({ error: 'Failed to fetch content or generate PDF' }, { status: 500 });
+export async function POST(request: Request) {
+  try {
+    const body: RequestBody = await request.json();
+
+    // Validate required fields
+    if (!body.url) {
+      return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
+
+    // Validate URL format
+    if (!validateUrl(body.url)) {
+      return NextResponse.json(
+        { error: "Invalid URL format" },
+        { status: 400 }
+      );
+    }
+
+    // Validate paper format if provided
+    if (body.paperFormat && !ALLOWED_PAPER_FORMATS.includes(body.paperFormat)) {
+      return NextResponse.json(
+        { error: "Invalid paper format" },
+        { status: 400 }
+      );
+    }
+
+    // Generate PDF
+    const { buffer, title } = await generatePDF({
+      url: body.url,
+      paperFormat: body.paperFormat,
+      darkMode: body.darkMode,
+    });
+
+    // Use the title as filename, or custom filename if provided
+    const fileName = body.fileName
+      ? sanitizeFileName(body.fileName)
+      : sanitizeFileName(title);
+
+    // Return PDF as downloadable file
+    return new NextResponse(buffer, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${fileName}"`,
+        "Content-Length": buffer.length.toString(),
+      },
+    });
+  } catch (error) {
+    console.error("PDF generation failed:", error);
+
+    const errorMessage =
+      error instanceof Error ? error.message : "An unexpected error occurred";
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  }
 }

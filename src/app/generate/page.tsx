@@ -22,7 +22,7 @@ const Page: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/scrape", {
+      const response = await fetch("https://chatcast-production.up.railway.app/generate/api/scrape", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
